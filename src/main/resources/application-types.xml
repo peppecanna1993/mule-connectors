@@ -1,0 +1,53 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="american-flights-example" format="json">
+      <types:shape format="weave" example="examples/exampleamerican.json"><![CDATA[%dw 2.0
+
+type american_flights_example = {|
+  ID: Number {"typeId": "int"}, 
+  code: String, 
+  price: Number {"typeId": "double"}, 
+  origin: String, 
+  destination: String, 
+  emptySeats: Number {"typeId": "int"}, 
+  plane: {|
+    "type": String, 
+    totalSeats: Number {"typeId": "int"}
+  |}
+|} {"example": "{\\\"ID\\\":1,\\\"code\\\":\\\"ERT909\\\",\\\"price\\\":499.99,\\\"origin\\\":\\\"MLN\\\",\\\"destination\\\":\\\"ROF\\\",\\\"emptySeats\\\":1,\\\"plane\\\":{\\\"type\\\":\\\"Boing 474\\\",\\\"totalSeats\\\":100}}"}
+
+]]></types:shape>
+    </types:type>
+    <types:type name="american-raw" format="json">
+      <types:shape format="weave" example="examples/american-raw-example.json"><![CDATA[%dw 2.0
+
+type american_raw = Array<{|  planeType: String,   code2: String,   takeOffDate: String,   code1: String,   fromAirport: String,   price: Number {"typeId": "int"},   seatsAvailable: Number {"typeId": "int"},   toAirport: String,   ID: Number {"typeId": "int"},   airlineName: String,   totalSeats: Number {"typeId": "int"}|}> {"example": "[{\\\"planeType\\\":\\\"Boeing 737\\\",\\\"code2\\\":\\\"1093\\\",\\\"takeOffDate\\\":\\\"2016-02-11T00:00:00\\\",\\\"code1\\\":\\\"rree\\\",\\\"fromAirport\\\":\\\"MUA\\\",\\\"price\\\":142,\\\"seatsAvailable\\\":1,\\\"toAirport\\\":\\\"SFO\\\",\\\"ID\\\":5,\\\"airlineName\\\":\\\"American Airlines\\\",\\\"totalSeats\\\":150},{\\\"planeType\\\":\\\"Boeing 777\\\",\\\"code2\\\":\\\"1994\\\",\\\"takeOffDate\\\":\\\"2016-01-01T00:00:00\\\",\\\"code1\\\":\\\"eefd\\\",\\\"fromAirport\\\":\\\"MUA\\\",\\\"price\\\":676,\\\"seatsAvailable\\\":0,\\\"toAirport\\\":\\\"SFO\\\",\\\"ID\\\":7,\\\"airlineName\\\":\\\"American Airlines\\\",\\\"totalSeats\\\":300}]"}
+
+]]></types:shape>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#5772893f-4837-4a4c-b516-27a8233446f0">
+    <types:processor-declaration>
+      <types:output-event>
+        <types:message>
+          <types:payload type="american-flights-example"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#939a7d0f-f42b-4106-8521-0bc05b161327">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="american-raw"/>
+        </types:message>
+      </types:input-event>
+      <types:output-event>
+        <types:message>
+          <types:payload type="american-flights-example"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+</types:mule>

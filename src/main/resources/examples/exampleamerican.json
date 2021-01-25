@@ -1,0 +1,12 @@
+{
+  "ID": 1,
+  "code": "ERT909",
+  "price": 499.99,
+  "origin": "MLN",
+  "destination": "ROF",
+  "emptySeats": 1,
+  "plane": {
+    "type": "Boing 474",
+    "totalSeats": 100
+  }
+  }
