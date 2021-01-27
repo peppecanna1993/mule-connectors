@@ -18,7 +18,7 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
 	</wsc:config>
 	<flow name="getAmericanFlights" doc:id="5c83adc0-2d7f-40f0-876a-bb0d69f5aa3a" >
 		<http:listener doc:name="GET /american" doc:id="978f40dc-1b73-49fa-bace-f2f3d17762f6" config-ref="HTTP_Listener_config" path="/voli"/>
-		<american-flights-api:get-flights doc:name="Get flights" doc:id="6a86a8e6-03b6-4f62-814c-33b5805427e2" config-ref="American_Flights_API_Config" client-id="d1374b15c6864c3682ddbed2a247a826" client-secret="4a87fe7e2e43488c927372AEF981F066" destination="SFO"/>
+		<american-flights-api:get-flights doc:name="Get flights" doc:id="6a86a8e6-03b6-4f62-814c-33b5805427e2" config-ref="American_Flights_API_Config" client-id="d1374b15c6864c3682ddbed2a247a826" client-secret="4a87fe7e2e43488c927372AEF981F066" destination="#[vars.destination]"/>
 		<ee:transform doc:name="Transform Message" doc:id="939a7d0f-f42b-4106-8521-0bc05b161327" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
@@ -39,12 +39,35 @@ payload map ( payload01 , indexOfPayload01 ) -> {
 }]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="280c24d0-5c4c-4773-aa5b-1e5362aab92f" type="ANY"/>
+		</error-handler>
 	</flow>
 	<flow name="getAllAirlines" doc:id="e2f6bac8-f509-49e3-be97-c8b0c1173184" >
-		<http:listener doc:name="GET /all" doc:id="cc781c08-8b98-4692-92c9-8758f7bdc0aa" config-ref="HTTP_Listener_config" path="/all"/>
+		<http:listener doc:name="GET /all" doc:id="cc781c08-8b98-4692-92c9-8758f7bdc0aa" config-ref="HTTP_Listener_config" path="/all">
+			<http:error-response statusCode="#[vars.statusCode default 500]" >
+				<http:body ><![CDATA[#[payload]]]></http:body>
+			</http:error-response>
+		</http:listener>
+		<set-variable value="#[message.attributes.queryParams.destination]" doc:name="Set destination" doc:id="4c01ea7b-bfd0-4196-9c83-825f3c5eb152" variableName="destination"/>
 		<scatter-gather doc:name="Scatter-Gather" doc:id="7ba6303b-6b31-4fb6-91d4-7cce903f93c7" >
 			<route >
-				<flow-ref doc:name="get America " doc:id="6be2898f-d477-4238-a269-b207fed9d1de" name="getAmericanFlights"/>
+				<try doc:name="Try" doc:id="db29344e-5488-45ca-8eb2-0929d24b8319" >
+					<flow-ref doc:name="get America " doc:id="6be2898f-d477-4238-a269-b207fed9d1de" name="getAmericanFlights" />
+					<error-handler >
+						<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="7d9770bc-7525-41a1-aeb2-a0ef0b03108c" >
+							<logger level="WARN" doc:name="Logger" doc:id="950843fa-6b11-4423-b74b-22aa3bec4940" message="SKIPPING DATA FROM AMERICAN "/>
+							<ee:transform doc:name="Transform Message" doc:id="71bbf9f5-aa34-4c8e-abd3-dd41b76ff7e1" >
+								<ee:message >
+									<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+[]]]></ee:set-payload>
+								</ee:message>
+							</ee:transform>
+						</on-error-continue>
+					</error-handler>
+				</try>
 			</route>
 			<route >
 				<flow-ref doc:name="get Delta" doc:id="b47f1194-3947-4cba-81fc-5e1d9afdf982" name="getDeltaFlights"/>
